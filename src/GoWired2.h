@@ -12,8 +12,14 @@
 #ifndef GoWired2_h
 #define GoWired2_h
 
+// Internal library files
 #include "core/CommonIO.h"
 #include "core/ExpanderIO.h"
 #include "core/Heating.h"
+
+// GoWired dependencies
+#include <MySensors.h>
+#include <Wire.h>
+#include <avr/wdt.h>
 
 #endif
