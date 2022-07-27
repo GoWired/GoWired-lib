@@ -1,1 +1,3 @@
+[![.github/workflows/arduino-lint.yml](https://github.com/GoWired/GoWired-lib/actions/workflows/arduino-lint.yml/badge.svg)](https://github.com/GoWired/GoWired-lib/actions/workflows/arduino-lint.yml)
+
 This is a repository for library files shared by all GoWired software. It has to be installed to make GoWired software compile (from release 2.0.0). When available via Arduino Library Manager it will come with most dependencies.
