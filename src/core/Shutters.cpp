@@ -77,23 +77,11 @@ uint32_t Shutters::ReadMessage(uint8_t Order) {
 
   uint32_t MovementTime;
 
-  if(State == 2)  {
-    NewState = Order;
+  NewState = Order;
 
-    if(Order == 0) {
-      MovementTime = _UpTime;
-    }
-    else if(Order == 1)  {
-      MovementTime = _DownTime;
-    }
-    else if(Order == 2) {
-      MovementTime = 0;
-    }
-  }
-  else  {
-    NewState = 2;
-    MovementTime = 0;
-  }
+  if(Order == 0) MovementTime = _UpTime;
+  else if(Order == 1) MovementTime = _DownTime;
+  else MovementTime = 0;
 
   return MovementTime;
 }
@@ -108,20 +96,15 @@ uint32_t Shutters::ReadButtons(uint8_t Button)  {
 
   uint32_t MovementTime;
 
-  // Roller shutter is stopped -> start moving
-  if(State == 2)  {
-    NewState = Button;
-    if(Button == 0) {
-      MovementTime = _UpTime;
-    }
-    else if(Button == 1)  {
-      MovementTime = _DownTime;
-    }
+  NewState = Button;
+
+  // Stop
+  if(State != 2 && State == NewState)  {
+    NewState = 2; MovementTime = 0;
   }
-  // Roller shutter is moving -> stop
+  // Start moving or change direction
   else  {
-    NewState = 2;
-    MovementTime = 0;
+    MovementTime = NewState == 0 ? _UpTime : _DownTime;
   }
 
   return MovementTime;
@@ -165,14 +148,18 @@ uint8_t Shutters::Movement()  {
   }
   // Move upward
   else if(NewState == 0)  {
-    digitalWrite(_DownPin, _RelayOff);
-	delay(20);
+    if(digitalRead(_DownPin) != _RelayOff) {
+      digitalWrite(_DownPin, _RelayOff);
+      delay(50);
+    }
     digitalWrite(_UpPin, _RelayOn);
   }
   // Move downward
   else if(NewState == 1) {
-    digitalWrite(_UpPin, _RelayOff);
-	delay(20);
+    if(digitalRead(_UpPin) != _RelayOff)  {
+      digitalWrite(_UpPin, _RelayOff);
+      delay(50);
+    }
     digitalWrite(_DownPin, _RelayOn);
   }
 
