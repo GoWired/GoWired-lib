@@ -44,8 +44,9 @@ class CommonIO
     bool _HighStateDetected;
     bool _RelayOFF;
 
-    bool _ReadAnalog(uint8_t Threshold);
-    bool _ReadDigital(uint8_t DebounceValue);
+    bool _ReadAnalog(uint8_t Threshold, uint8_t InputPin);
+    bool _ReadDigital(uint8_t DebounceValue, uint8_t InputPin);
+    void _ReadReference(uint8_t InputPin);
    
 };
 

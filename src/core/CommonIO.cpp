@@ -65,18 +65,18 @@ void CommonIO::SetValues(bool RelayOFF, bool Invert, uint8_t Type, uint8_t Pin1,
       break;
     // Touch button
     case 5:
-      _SensorPin = Pin1;    ReadReference();
+      _SensorPin = Pin1;    _ReadReference(_SensorPin);
       break;
     // Touch button + digital button + output
     case 6:
-      _SensorPin = Pin1;    ReadReference();
+      _SensorPin = Pin1;    _ReadReference(_SensorPin);
       _SensorPin2 = Pin2;   pinMode(_SensorPin2, INPUT_PULLUP);
       _RelayPin = Pin3;     pinMode(_RelayPin, OUTPUT);
       digitalWrite(_RelayPin, _RelayOFF);
       break;
     // Touch button + output
     case 7:
-      _SensorPin = Pin1;    ReadReference();
+      _SensorPin = Pin1;    _ReadReference(_SensorPin);
       _RelayPin = Pin2;     pinMode(_RelayPin, OUTPUT);
       digitalWrite(_RelayPin, _RelayOFF);
       break;
@@ -86,12 +86,25 @@ void CommonIO::SetValues(bool RelayOFF, bool Invert, uint8_t Type, uint8_t Pin1,
 }
 
 /**
- * @brief reads reference value for touch buttons
+ * @brief public function to call _ReadReference()
  * 
  */
 void CommonIO::ReadReference()  {
 
-  _TouchReference = ADCTouch.read(_SensorPin, 500);         // ADCTouch.read(pin, number of samples)
+  uint8_t InputPin;
+
+  if(SensorType == 5 || SensorType == 6 || SensorType == 7) InputPin = _SensorPin;
+
+  _ReadReference(InputPin);
+}
+
+/**
+ * @brief reads reference value for touch buttons
+ * 
+ */
+void CommonIO::_ReadReference(uint8_t InputPin)  {
+
+  _TouchReference = ADCTouch.read(InputPin, 512);         // ADCTouch.read(pin, number of samples)
 }
 
 /**
@@ -119,7 +132,7 @@ void CommonIO::CheckInput(uint16_t LongpressDuration, uint8_t DebounceValue) {
   uint32_t StartTime = millis();
 
   do  {
-    Reading = _ReadDigital(DebounceValue);
+    Reading = _ReadDigital(DebounceValue, _SensorPin);
 
     if(SensorType == 0 || SensorType == 1)  {
       if(State != Reading)  {
@@ -167,10 +180,10 @@ void CommonIO::CheckInput2(uint8_t Threshold, uint16_t LongpressDuration, uint8_
   uint32_t StartTime = millis();
 
   do  {
-    Reading = _ReadAnalog(Threshold);
+    Reading = _ReadAnalog(Threshold, _SensorPin);
     
     if(SensorType == 6 && !Reading) {
-      Reading = _ReadDigital(DebounceValue);
+      Reading = _ReadDigital(DebounceValue, _SensorPin2);
     }
 
     if(!Shortpress && Reading) {
@@ -195,10 +208,10 @@ void CommonIO::CheckInput3(uint8_t Threshold, uint8_t DebounceValue, bool Monost
   bool Shortpress = false;
 
   do  {
-    Reading = _ReadAnalog(Threshold);
+    Reading = _ReadAnalog(Threshold, _SensorPin);
     
     if(SensorType == 6 && !Reading) {
-      Reading = _ReadDigital(DebounceValue);
+      Reading = _ReadDigital(DebounceValue, _SensorPin2);
     }
 
     if(Monostable)  {
@@ -227,7 +240,7 @@ void CommonIO::CheckInput3(uint8_t Threshold, uint8_t DebounceValue, bool Monost
  * @return true if input state is true
  * @return false if input state is false
  */
-bool CommonIO::_ReadDigital(uint8_t DebounceValue) {
+bool CommonIO::_ReadDigital(uint8_t DebounceValue, uint8_t InputPin) {
 
   bool DigitalReading;
   bool PreviousReading = false;
@@ -235,7 +248,7 @@ bool CommonIO::_ReadDigital(uint8_t DebounceValue) {
   uint32_t StartTime = millis();
 
   do {
-    DigitalReading = (_Invert ? digitalRead(_SensorPin) : !digitalRead(_SensorPin));
+    DigitalReading = (_Invert ? digitalRead(InputPin) : !digitalRead(InputPin));
 
     if(DigitalReading && !PreviousReading)  {
       StartTime = millis();
@@ -267,12 +280,12 @@ bool CommonIO::_ReadDigital(uint8_t DebounceValue) {
  * @return true if touch was sensed
  * @return false if touch was not sensed
  */
-bool CommonIO::_ReadAnalog(uint8_t Threshold)  {
+bool CommonIO::_ReadAnalog(uint8_t Threshold, uint8_t InputPin)  {
 
   int TouchValue;
   bool ButtonState = false;
 
-  TouchValue = ADCTouch.read(_SensorPin, 64);
+  TouchValue = ADCTouch.read(InputPin, 64);
   TouchValue -= _TouchReference;
   TouchDiagnosisValue = TouchValue;
 
